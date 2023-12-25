@@ -1,8 +1,12 @@
+import json
+import os
+
 from typing import NamedTuple, Optional, Tuple, Generator
 
 import numpy as np
 from matplotlib import pyplot as plt
 from skimage.draw import circle_perimeter_aa
+import torch
 
 
 class CircleParams(NamedTuple):
@@ -55,8 +59,9 @@ def show_circle(img: np.ndarray) -> None:
     ax.set_title('Circle')
     plt.show()
 
+
 def save_img(img: np.ndarray, filename: str) -> None:
-    plt.imsave(filename, img, cmap='gray') 
+    plt.imsave(filename, img, cmap='gray')
 
 
 def generate_examples(
@@ -107,12 +112,13 @@ def iou(a: CircleParams, b: CircleParams) -> float:
     union = np.pi * (r1_sq + r2_sq) - intersection
     return intersection / union
 
+
 def plot_losses(loss_arr, val_loss_arr, save_path):
     assert len(loss_arr) == len(val_loss_arr)
 
     plt.figure(figsize=(10, 6))
     plt.plot(loss_arr, label='Train Set', color='blue', linewidth=2)
-    plt.plot(val_loss_arr, label='Validation Set', color='orange', linewidth=2)
+    plt.plot(val_loss_arr, label='Test Set', color='orange', linewidth=2)
     plt.title("MSE / L1 Loss", fontsize=14)
     plt.xlabel("Epochs", fontsize=12)
     plt.ylabel("Loss", fontsize=12)
@@ -121,12 +127,13 @@ def plot_losses(loss_arr, val_loss_arr, save_path):
     plt.savefig(save_path, dpi=300)
     plt.cla()
 
+
 def plot_mean_iou(train_iou, val_iou, save_path):
     assert len(train_iou) == len(val_iou)
 
     plt.figure(figsize=(10, 6))
     plt.plot(train_iou, label='Train Set', color='blue', linewidth=2)
-    plt.plot(val_iou, label='Validation Set', color='orange', linewidth=2)
+    plt.plot(val_iou, label='Test Set', color='orange', linewidth=2)
     plt.title("Mean IoU", fontsize=14)
     plt.xlabel("Epochs", fontsize=12)
     plt.ylabel("IoU", fontsize=12)
@@ -134,3 +141,25 @@ def plot_mean_iou(train_iou, val_iou, save_path):
     plt.grid(True)
     plt.savefig(save_path, dpi=300)
     plt.cla()
+
+
+def load_config(config_json: str) -> dict:
+    if not os.path.exists(config_json) or not config_json.endswith("json"):
+        raise Warning("Specified JSON file does not exist!")
+    with open(config_json, "r") as f:
+        config = json.load(f)
+    return config
+
+
+@torch.no_grad()
+def thresholded_iou(predicted: torch.Tensor, labels: torch.Tensor, threshold: float = 0.9) -> Tuple[float]:
+    correct = 0
+    total_iou = 0
+    for pred, y in zip(predicted, labels):
+        i = float(iou(CircleParams(*pred), CircleParams(*y)))
+        total_iou += i
+        if i > threshold:
+            correct += 1
+    accuracy = correct / predicted.size(0)
+    mean_iou = total_iou / predicted.size(0)
+    return accuracy, mean_iou
