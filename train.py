@@ -23,6 +23,8 @@ torch.manual_seed(42)
 def parse_cmd_line() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--checkpoint")
+    parser.add_argument("--data_path", required=True)
+    parser.add_argument("--config_file", required=True)
     return parser.parse_args()
 
 
@@ -116,7 +118,7 @@ def train(train_dataset_json: str, test_dataset_json: str, config_json: str, arg
     train_iou = []
     val_iou = []
 
-    save_every = 20
+    save_every = config["save_every"]
 
     for i in range(num_epochs):
         loss_epoch = 0
@@ -161,13 +163,13 @@ def train(train_dataset_json: str, test_dataset_json: str, config_json: str, arg
 
 
 if __name__ == "__main__":
-    TRAIN_DATASET_JSON = "data/train/dataset.json"
-    TEST_DATASET_JSON = "data/test/dataset.json"
-    CONFIG_JSON = "config/parameter.json"
-
-    args: argparse.Namespace = parse_cmd_line()
+    args = parse_cmd_line()
     if args.checkpoint and not os.path.isfile(args.checkpoint):
         raise Warning(
             f"Specified checkpoint at {args.checkpoint} does not exist!")
 
-    train(TRAIN_DATASET_JSON, TEST_DATASET_JSON, CONFIG_JSON, args)
+    train_dataset_json = f"{args.data_path}/train/dataset.json"
+    test_dataset_json = f"{args.data_path}/test/dataset.json"
+    config_json = args.config_file
+
+    train(train_dataset_json, test_dataset_json, config_json, args)
