@@ -60,8 +60,3 @@ class CNN(nn.Module):
         x = relu(x)
         x = self.linear_3(x)
         return x
-
-        # centers = self.img_size * sigmoid(x[:, :2])
-        # radius = self.radius_scale * sigmoid(x[:, 2])
-
-        # return torch.cat([centers, radius.unsqueeze(1)], dim=1)

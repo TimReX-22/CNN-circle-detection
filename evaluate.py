@@ -14,13 +14,13 @@ def parse_cmd_line() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--checkpoint", required=True)
     parser.add_argument("-p", "--parameters", required=True)
-    parser.add_argument("-i", "--images_path", required=True)
+    parser.add_argument("-d", "--dataset_path", required=True)
     return parser.parse_args()
 
 
 def evaluate(args: argparse.Namespace) -> None:
     config = load_config(args.parameters)
-    dataset, img_size, max_radius = load_datasets(args.images_path)
+    dataset, img_size, max_radius = load_datasets(args.dataset_path)
 
     kernel_size = config["kernel_size"]
     batch_size = config["batch_size"]
