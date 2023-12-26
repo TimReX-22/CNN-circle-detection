@@ -1,15 +1,24 @@
 import json
 import os
+import argparse
 
 from util import generate_examples, save_img
 
-if __name__ == "__main__":
-    NOISE_LEVEL = 0.3
-    IMG_SIZE = 100
-    NR_OF_EXAMPLES = [5000, 500, 500]
-    SET_NAMES = ["train", "test", "val"]
 
-    for i, set_name in enumerate(SET_NAMES):
+def parse_cmd_line() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--img_size", required=True)
+    parser.add_argument("--noise_level", required=True)
+    return parser.parse_args()
+
+
+def create_dataset(args: argparse.Namespace):
+    num_examples = [5000, 500, 500]
+    set_names = ["train", "test", "val"]
+    img_size = int(args.img_size)
+    noise_level = float(args.noise_level)
+
+    for i, set_name in enumerate(set_names):
 
         data_dir = f"data/{set_name}"
 
@@ -19,15 +28,20 @@ if __name__ == "__main__":
         count = 0
         labels = {}
 
-        for img, params in generate_examples(NOISE_LEVEL, IMG_SIZE):
+        for img, params in generate_examples(noise_level, img_size):
             name = f"img_{count}.png"
             labels[name] = params._asdict()
             img_path = f"{data_dir}/{name}"
             save_img(img, img_path)
             count += 1
 
-            if count > NR_OF_EXAMPLES[i]:
+            if count > num_examples[i]:
                 break
 
         with open(f"{data_dir}/dataset.json", "w") as f:
             json.dump(labels, f)
+
+
+if __name__ == "__main__":
+    args = parse_cmd_line()
+    create_dataset(args)
